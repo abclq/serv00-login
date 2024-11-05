@@ -78,35 +78,32 @@ async def main():
         print(f'读取 accounts.json 文件时出错: {e}')
         return
 
+    successful_accounts = []  # 用于记录成功登录的账号
     all_logins_successful = True  # 用于标记是否所有账号登录成功
-    successful_accounts = []  # 用于保存所有成功登录的账号
 
     for account in accounts:
         username = account['username']
         password = account['password']
         panel = account['panel']
 
-        serviceName = 'ct8' if 'ct8' in panel else 'serv00'
         is_logged_in = await login(username, password, panel)
 
         if is_logged_in:
-            now_utc = format_to_iso(datetime.utcnow())
             now_beijing = format_to_iso(datetime.utcnow() + timedelta(hours=8))
-            success_message = f'{serviceName}账号 {username} 于北京时间 {now_beijing}（UTC时间 {now_utc}）登录成功！'
-            message += success_message + '\n'
-            print(f'{serviceName}账号 {username} 于北京时间 {now_beijing} 登录成功！')
-            successful_accounts.append(username)  # 记录成功登录的账号
+            successful_accounts.append(username)
+            print(f'{username} 于北京时间 {now_beijing} 登录成功！')
         else:
             all_logins_successful = False
-            message += f'{serviceName}账号 {username} 登录失败，请检查{serviceName}账号和密码是否正确。\n'
-            print(f'{serviceName}账号 {username} 登录失败，请检查{serviceName}账号和密码是否正确。')
+            print(f'{username} 登录失败，请检查账号和密码是否正确。')
 
         delay = random.randint(1000, 8000)
         await delay_time(delay)
 
     if all_logins_successful:
-        message += f"所有serv00账号登录完成！成功登录的账号: {', '.join(successful_accounts)}"
-        print(f"所有serv00账号登录完成！成功登录的账号: {', '.join(successful_accounts)}")
+        message += f'serv00账号: {", ".join(successful_accounts)}\n'
+        message += f'于北京时间 {now_beijing} 登录成功！\n'
+        message += '所有serv00账号登录完成！'
+        print('所有serv00账号登录完成！')
         await send_telegram_message(message)
     else:
         print('有账号登录失败，请检查日志中的错误信息。')
@@ -124,12 +121,10 @@ async def send_telegram_message(message):
     }
     try:
         response = requests.post(url, json=payload)
-        print(f"Telegram API response: {response.status_code} {response.text}")
         if response.status_code != 200:
             print(f"发送消息失败，状态码: {response.status_code}, 响应内容: {response.text}")
     except Exception as e:
-        print(f"发送 Telegram 消息时出错: {e}")
+        print(f"发送消息时出现错误: {e}")
 
-# 执行主函数
 if __name__ == '__main__':
     asyncio.run(main())
