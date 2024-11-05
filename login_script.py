@@ -7,9 +7,12 @@ import random
 import requests
 import os
 
-# 从环境变量中获取 Telegram Bot Token 和 Chat ID
+# Load environment variables
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+
+if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+    raise ValueError("Telegram bot token and chat ID must be set in the environment variables.")
 
 def format_to_iso(date):
     return date.strftime('%Y-%m-%d %H:%M:%S')
@@ -17,21 +20,11 @@ def format_to_iso(date):
 async def delay_time(ms):
     await asyncio.sleep(ms / 1000)
 
-# 全局浏览器实例
-browser = None
-
-# telegram消息
-message = 'serv00&ct8自动化脚本运行\n'
-
-async def login(username, password, panel):
-    global browser
-
-    page = None  # 确保 page 在任何情况下都被定义
+# Login function
+async def login(username, password, panel, browser):
+    page = None
     serviceName = 'ct8' if 'ct8' in panel else 'serv00'
     try:
-        if not browser:
-            browser = await launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-
         page = await browser.newPage()
         url = f'https://{panel}/login/?next=/'
         await page.goto(url)
@@ -47,7 +40,7 @@ async def login(username, password, panel):
         if login_button:
             await login_button.click()
         else:
-            raise Exception('无法找到登录按钮')
+            raise Exception('Login button not found.')
 
         await page.waitForNavigation()
 
@@ -59,7 +52,7 @@ async def login(username, password, panel):
         return is_logged_in
 
     except Exception as e:
-        print(f'{serviceName}账号 {username} 登录时出现错误: {e}')
+        print(f'{serviceName} account {username} encountered an error during login: {e}')
         return False
 
     finally:
@@ -67,42 +60,54 @@ async def login(username, password, panel):
             await page.close()
 
 async def main():
-    global message
-    message = 'serv00&ct8自动化脚本运行\n'
+    message = 'serv00&ct8 Automation Script Run\n'
 
     try:
+        # Load account data from JSON file
         async with aiofiles.open('accounts.json', mode='r', encoding='utf-8') as f:
             accounts_json = await f.read()
         accounts = json.loads(accounts_json)
     except Exception as e:
-        print(f'读取 accounts.json 文件时出错: {e}')
+        print(f'Error reading accounts.json: {e}')
         return
 
-    for account in accounts:
-        username = account['username']
-        password = account['password']
-        panel = account['panel']
+    # Launch browser
+    browser = await launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+    try:
+        for account in accounts:
+            username = account['username']
+            password = account['password']
+            panel = account['panel']
+            serviceName = 'ct8' if 'ct8' in panel else 'serv00'
 
-        serviceName = 'ct8' if 'ct8' in panel else 'serv00'
-        is_logged_in = await login(username, password, panel)
-
-        if is_logged_in:
+            # Attempt login for each account
+            is_logged_in = await login(username, password, panel, browser)
             now_utc = format_to_iso(datetime.utcnow())
             now_beijing = format_to_iso(datetime.utcnow() + timedelta(hours=8))
-            success_message = f'{serviceName}账号 {username} 于北京时间 {now_beijing}（UTC时间 {now_utc}）登录成功！'
-            message += success_message + '\n'
-            print(success_message)
-        else:
-            message += f'{serviceName}账号 {username} 登录失败，请检查{serviceName}账号和密码是否正确。\n'
-            print(f'{serviceName}账号 {username} 登录失败，请检查{serviceName}账号和密码是否正确。')
 
-        delay = random.randint(1000, 8000)
-        await delay_time(delay)
-        
-    message += f'所有{serviceName}账号登录完成！'
-    await send_telegram_message(message)
-    print(f'所有{serviceName}账号登录完成！')
+            if is_logged_in:
+                success_message = f'{serviceName} account {username} successfully logged in at Beijing Time {now_beijing} (UTC {now_utc})!'
+                message += success_message + '\n'
+                print(success_message)
+            else:
+                failure_message = f'{serviceName} account {username} login failed. Check username and password.'
+                message += failure_message + '\n'
+                print(failure_message)
 
+            # Introduce a random delay between logins to avoid blocking
+            delay = random.randint(1000, 8000)
+            await delay_time(delay)
+
+        # Send summary message to Telegram
+        message += f'All {serviceName} account logins completed!'
+        await send_telegram_message(message)
+        print(f'All {serviceName} account logins completed!')
+
+    finally:
+        # Ensure the browser is closed
+        await browser.close()
+
+# Send Telegram message
 async def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
@@ -112,7 +117,7 @@ async def send_telegram_message(message):
             'inline_keyboard': [
                 [
                     {
-                        'text': '问题反馈❓',
+                        'text': 'Issue Feedback❓',
                         'url': 'https://t.me/yxjsjl'
                     }
                 ]
@@ -125,9 +130,9 @@ async def send_telegram_message(message):
     try:
         response = requests.post(url, json=payload, headers=headers)
         if response.status_code != 200:
-            print(f"发送消息到Telegram失败: {response.text}")
+            print(f"Failed to send message to Telegram: {response.text}")
     except Exception as e:
-        print(f"发送消息到Telegram时出错: {e}")
+        print(f"Error sending message to Telegram: {e}")
 
 if __name__ == '__main__':
     asyncio.run(main())
