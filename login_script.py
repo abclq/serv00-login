@@ -19,7 +19,7 @@ async def delay_time(ms):
 browser = None
 
 # Telegram 消息
-message = 'serv00&ct8自动化脚本运行\n'
+message = 'serv00&ct8自动化脚本运行n'
 
 async def login(username, password, panel):
     global browser
@@ -83,27 +83,32 @@ async def send_telegram_message(message):
 
 async def main():
     global message
-    message = 'serv00&ct8自动化脚本运行\n'
+    message = 'serv00&ct8自动化脚本运行n'
 
     # 登录信息
-    username = "MichaelCarter"
-    password = "dmW9ao1K34wH0Qbs)lDL"
-    panel = "panel14.serv00.com"
+    accounts = [
+        {"username": "MichaelCarter", "password": "dmW9ao1K34wH0Qbs)lDL", "panel": "panel14.serv00.com"},
+        {"username": "Thkeresa", "password": "9IpOtvMe43bXyK6DRKp4", "panel": "panel14.serv00.com"}
+    ]
 
     # 当前北京时间
     now_beijing = format_to_iso(datetime.utcnow() + timedelta(hours=8))
 
-    # 登录尝试
-    is_logged_in = await login(username, password, panel)
+    for account in accounts:
+        username = account["username"]
+        password = account["password"]
+        panel = account["panel"]
 
-    if is_logged_in:
-        message += f'serv00账号: {username}\n'
-        message += f'于北京时间 {now_beijing} 登录成功！\n'
-        message += '所有serv00账号登录完成！'
-        print(f'{username} 于北京时间 {now_beijing} 登录成功！')
-    else:
-        message += f'{username} 登录失败，请检查账号和密码是否正确。'
-        print(f'{username} 登录失败，请检查账号和密码是否正确。')
+        # 登录尝试
+        is_logged_in = await login(username, password, panel)
+
+        if is_logged_in:
+            message += f'serv00账号: {username}n'
+            message += f'于北京时间 {now_beijing} 登录成功！n'
+            print(f'{username} 于北京时间 {now_beijing} 登录成功！')
+        else:
+            message += f'{username} 登录失败，请检查账号和密码是否正确。n'
+            print(f'{username} 登录失败，请检查账号和密码是否正确。')
 
     # 发送 Telegram 消息
     await send_telegram_message(message)
