@@ -19,9 +19,6 @@ async def delay_time(ms):
 # 全局浏览器实例
 browser = None
 
-# Telegram 消息模板
-message = 'serv00&ct8自动化脚本运行\n'
-
 async def login(username, password, panel):
     """尝试登录并返回是否成功"""
     global browser
@@ -86,8 +83,8 @@ async def send_telegram_message(message):
 
 async def main():
     """主程序入口"""
-    global message
-    message = 'serv00&ct8自动化脚本运行\n'
+    success_accounts = []
+    failed_accounts = []
 
     # 登录信息
     accounts = [
@@ -116,15 +113,27 @@ async def main():
         is_logged_in = await login(username, password, panel)
 
         if is_logged_in:
-            message += f'serv00账号: {username}\n'
-            message += f'于北京时间 {now_beijing} 登录成功！\n'
+            success_accounts.append({"username": username, "time": now_beijing})
             print(f'{username} 于北京时间 {now_beijing} 登录成功！')
         else:
-            message += f'{username} 登录失败，请检查账号和密码是否正确。\n'
+            failed_accounts.append(username)
             print(f'{username} 登录失败，请检查账号和密码是否正确。')
 
-    # 添加完成消息
-    message += '所有serv00账号登录完成！'
+    # 构建消息
+    message = "✅ *serv00&ct8自动化脚本运行完成！*\n\n"
+    if success_accounts:
+        message += "✔️ *登录成功：*\n"
+        for i, account in enumerate(success_accounts, 1):
+            message += f"{i}. {account['username']} — 登录时间: {account['time']}\n"
+        message += "\n"
+
+    if failed_accounts:
+        message += "❌ *登录失败：*\n"
+        for account in failed_accounts:
+            message += f"- {account}\n"
+        message += "\n"
+
+    message += f"📌 *总结：{len(success_accounts)} 个账号登录成功，{len(failed_accounts)} 个账号登录失败。*"
 
     # 发送 Telegram 消息
     await send_telegram_message(message)
