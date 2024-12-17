@@ -3,25 +3,27 @@ from pyppeteer import launch
 from datetime import datetime, timedelta
 import random
 import requests
-import os
 
 # Telegram 配置
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '你的默认Token')  # 如果需要，替换为实际的Token
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '你的默认Chat ID')  # 如果需要，替换为实际的Chat ID
+TELEGRAM_TOKEN = "7056296159:AAGDFwNTx8OA0dzv1S0WN0CDh3iinBipeXs"
+TELEGRAM_CHAT_ID = 685294921
 
 def format_to_iso(date):
+    """格式化时间为 ISO 格式"""
     return date.strftime('%Y-%m-%d %H:%M:%S')
 
 async def delay_time(ms):
+    """以毫秒为单位的随机延迟"""
     await asyncio.sleep(ms / 1000)
 
 # 全局浏览器实例
 browser = None
 
-# Telegram 消息
-message = 'serv00&ct8自动化脚本运行n'
+# Telegram 消息模板
+message = 'serv00&ct8自动化脚本运行\n'
 
 async def login(username, password, panel):
+    """尝试登录并返回是否成功"""
     global browser
 
     page = None
@@ -66,7 +68,8 @@ async def login(username, password, panel):
             await page.close()
 
 async def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    """发送 Telegram 消息"""
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
         'text': message,
@@ -82,12 +85,17 @@ async def send_telegram_message(message):
         print(f"发送 Telegram 消息时发生错误: {e}")
 
 async def main():
+    """主程序入口"""
     global message
-    message = 'serv00&ct8自动化脚本运行n'
+    message = 'serv00&ct8自动化脚本运行\n'
 
     # 登录信息
     accounts = [
         {"username": "MichaelCarter", "password": "dmW9ao1K34wH0Qbs)lDL", "panel": "panel14.serv00.com"},
+        {"username": "MorefieldPaul", "password": "jpvg37Z!Ur^oy(S*nic!", "panel": "panel15.serv00.com"},
+        {"username": "Subbillson", "password": "Gu@y77S94M6!kbJ(wQYb", "panel": "panel15.serv00.com"},
+        {"username": "Abrount", "password": "&E@m)P4e*^7(QuczNoGC", "panel": "panel15.serv00.com"},
+        {"username": "TheresaFught", "password": "@kL^0E#sA^6%OhC3xnmI", "panel": "panel15.serv00.com"},
         {"username": "Thkeresa", "password": "9IpOtvMe43bXyK6DRKp4", "panel": "panel14.serv00.com"}
     ]
 
@@ -99,16 +107,24 @@ async def main():
         password = account["password"]
         panel = account["panel"]
 
+        # 加入随机延迟
+        random_delay = random.randint(2000, 5000)  # 2到5秒随机延迟
+        print(f'随机延迟 {random_delay} ms...')
+        await delay_time(random_delay)
+
         # 登录尝试
         is_logged_in = await login(username, password, panel)
 
         if is_logged_in:
-            message += f'serv00账号: {username}n'
-            message += f'于北京时间 {now_beijing} 登录成功！n'
+            message += f'serv00账号: {username}\n'
+            message += f'于北京时间 {now_beijing} 登录成功！\n'
             print(f'{username} 于北京时间 {now_beijing} 登录成功！')
         else:
-            message += f'{username} 登录失败，请检查账号和密码是否正确。n'
+            message += f'{username} 登录失败，请检查账号和密码是否正确。\n'
             print(f'{username} 登录失败，请检查账号和密码是否正确。')
+
+    # 添加完成消息
+    message += '所有serv00账号登录完成！'
 
     # 发送 Telegram 消息
     await send_telegram_message(message)
