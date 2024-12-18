@@ -93,7 +93,8 @@ async def main():
         {"username": "Subbillson", "password": "Gu@y77S94M6!kbJ(wQYb", "panel": "panel15.serv00.com"},
         {"username": "Abrount", "password": "&E@m)P4e*^7(QuczNoGC", "panel": "panel15.serv00.com"},
         {"username": "TheresaFught", "password": "@kL^0E#sA^6%OhC3xnmI", "panel": "panel15.serv00.com"},
-        {"username": "Thkeresa", "password": "9IpOtvMe43bXyK6DRKp4", "panel": "panel14.serv00.com"}
+        {"username": "Thkeresa", "password": "9IpOtvMe43bXyK6DRKp4", "panel": "panel14.serv00.com"},
+        {"username": "Laint19628200", "password": "DL1HSufZ4GjL3HhlOMgl", "panel": "panel15.serv00.com"}
     ]
 
     # 当前北京时间
